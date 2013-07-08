@@ -1,0 +1,56 @@
+CFLAGS=-Wall -g -DDEBUG -DOSX
+
+all:DevBox.app
+
+OBJS=Main.o\
+	Debug.o\
+	Error.o\
+	Common.o\
+	WinShim.o\
+	File.o\
+	GetOpt.o\
+	Eko.o\
+	Tail.o\
+	LineCount.o\
+	HexDump.o\
+    BackName.o
+
+DevBox.app: $(OBJS)
+	cc $(OBJS) -o DevBox.app
+
+Main.o: Main.h Main.c
+	cc $(CFLAGS) -c Main.c
+
+Debug.o: Debug.h Debug.c
+	cc $(CFLAGS) -c Debug.c
+
+Error.o: Error.h Error.c
+	cc $(CFLAGS) -c Error.c
+
+Common.o: Common.h Common.c
+	cc $(CFLAGS) -c Common.c
+
+Eko.o: Eko.h Eko.c
+	cc $(CFLAGS) -c Eko.c
+
+Tail.o: Tail.h Tail.c
+	cc $(CFLAGS) -c Tail.c
+
+BackName.o: BackName.h BackName.c
+	cc $(CFLAGS) -c BackName.c
+
+LineCount.o: LineCount.h LineCount.c
+	cc $(CFLAGS) -c LineCount.c
+
+HexDump.o: HexDump.h HexDump.c
+	cc $(CFLAGS) -c HexDump.c
+
+File.o: File.h File.c
+	cc $(CFLAGS) -c File.c
+
+WinShim.o: WinShim.h WinShim.c
+	cc $(CFLAGS) -c WinShim.c
+
+clean: 
+	rm *.o *.exe *.app
+
