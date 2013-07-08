@@ -12,6 +12,11 @@
 #define DEBUG_LEVEL DEBUG_TRACE|DBG_WARN|DBG_ERROR
 #endif
 
+#if OS_TYPE == OS_TYPE_WINDOWS
+#pragma warning(disable: 4127)
+#pragma warning(disable: 4100)
+#endif
+
 static int gDebugLevel = DEBUG_LEVEL;
 
 #define DBG_MSG(level, ...)\
