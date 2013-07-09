@@ -58,7 +58,7 @@ const OsxEntry_T gStopBitsTable [] =
 
 typedef struct
 {
-	int 			hPort;
+    int             hPort;
     struct termios  PortOptions;                                                                         
 } OsxUart_T;
 
@@ -84,7 +84,7 @@ OsxUartConvertSettings(
 
 int
 OsxUartCtor(
-	IN uhandle_t	*phUart
+    IN uhandle_t    *phUart
     )
 {   
     int Retval;                                                                                     
@@ -104,16 +104,16 @@ ExitOnFailure:
 
 void
 OsxUartDtor(
-	IN uhandle_t	hUart
+    IN uhandle_t    hUart
     )
 {
-	DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
-	free ((void *)hUart);
+    DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
+    free ((void *)hUart);
 }
 
 int
 OsxUartOpen(
-	IN uhandle_t	hUart,
+    IN uhandle_t    hUart,
     IN const char   *pName,
     IN unsigned int uRate,
     IN unsigned int uBits,
@@ -121,37 +121,37 @@ OsxUartOpen(
     IN unsigned int uStop
     )
 {
-	int Retval;
-	OsxUart_T *pUart = (OsxUart_T *)hUart;
+    int Retval;
+    OsxUart_T *pUart = (OsxUart_T *)hUart;
     struct termios options;                                                                         
 
-	DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
+    DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
 
-	/* Open the port non blocking */
+    /* Open the port non blocking */
     pUart->hPort = open(pName, O_RDWR | O_NOCTTY | O_NDELAY);                                            
-	Retval = pUart->hPort != -1 ? S_OK : E_FAIL;
+    Retval = pUart->hPort != -1 ? S_OK : E_FAIL;
     CHECK_RETVAL(Retval, ExitOnFailure);                                                            
 
     /* 
-	 * Note: open() follows POSIX semantics: multiple open() calls to the same file will 
-	 * succeed unless the TIOCEXCL ioctl is issued. This will prevent additional opens except 
-	 * by root-owned processes.      
-	 */                                                                             
+     * Note: open() follows POSIX semantics: multiple open() calls to the same file will 
+     * succeed unless the TIOCEXCL ioctl is issued. This will prevent additional opens except 
+     * by root-owned processes.      
+     */                                                                             
     Retval = ioctl(pUart->hPort, TIOCEXCL) != -1 ? S_OK : E_FAIL;
     CHECK_RETVAL(Retval, ExitOnFailure);                                                            
-	
+    
     /* Get the current port settings */
     Retval = tcgetattr(pUart->hPort, &options);                                                                        
     CHECK_RETVAL(Retval, ExitOnFailure);                                                            
 
-	/* Make a copy of the port options, restored on close */
-	pUart->PortOptions = options;
+    /* Make a copy of the port options, restored on close */
+    pUart->PortOptions = options;
 
-	/* Clear parity, stop bit and bit */
-	options.c_cflag = options.c_cflag & ~(PARENB | PARODD | CSTOPB);
-	
-	/* Convert the universal settings to the specific settings */
-	Retval = OsxUartConvertSettings(&uRate, &uBits, &uParity, &uStop);
+    /* Clear parity, stop bit and bit */
+    options.c_cflag = options.c_cflag & ~(PARENB | PARODD | CSTOPB);
+    
+    /* Convert the universal settings to the specific settings */
+    Retval = OsxUartConvertSettings(&uRate, &uBits, &uParity, &uStop);
     CHECK_RETVAL(Retval, ExitOnFailure);                                                            
 
     // Set the baud rates                                                                
@@ -164,11 +164,11 @@ OsxUartOpen(
 
     // set the parity 
     options.c_cflag &= ~(PARENB | PARODD);                                                                     
-	options.c_cflag |= uParity;
+    options.c_cflag |= uParity;
 
     // set the stop bits 
     options.c_cflag &= ~CSTOPB;                                                                 
-	options.c_cflag |= uStop;
+    options.c_cflag |= uStop;
 
     // no hw flowcontrol                                                                     
     options.c_cflag &= ~CRTSCTS;                                                                
@@ -176,10 +176,10 @@ OsxUartOpen(
     // ignore modem controllines + enable receiver                                                   
     options.c_cflag |= (CLOCAL | CREAD);                                                            
                                                                                                     
-	// raw mode                                                                                  
-	options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);                                         
+    // raw mode                                                                                  
+    options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);                                         
 
-   	// no sw flowcontrol                                                                         
+    // no sw flowcontrol                                                                         
     options.c_lflag &= ~(IXON | IXOFF | IXANY);                                                 
                                                                                                     
     // raw mode output                                                                               
@@ -200,21 +200,21 @@ ExitOnFailure:
 
 void
 OsxUartClose(
-	IN uhandle_t	hUart
+    IN uhandle_t    hUart
     )
 {
-	int Retval;
+    int Retval;
     OsxUart_T *pUart = (OsxUart_T *)hUart;
 
-	DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
+    DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
 
     if (pUart && pUart->hPort)
     {
-		/* Restore the port settings */
-    	Retval = tcsetattr(pUart->hPort, 
-						   TCSANOW|TCSAFLUSH, 
-						   &pUart->PortOptions);                                                     
-		
+        /* Restore the port settings */
+        Retval = tcsetattr(pUart->hPort, 
+                           TCSANOW|TCSAFLUSH, 
+                           &pUart->PortOptions);                                                     
+        
         close(pUart->hPort);
 
         pUart->hPort = 0;
@@ -223,158 +223,158 @@ OsxUartClose(
 
 int
 OsxUartRead(
-	IN uhandle_t	hUart,
+    IN uhandle_t    hUart,
     IO void         *pBuff,     
     IN unsigned int uLength,    
     OUT unsigned int *puRead,   
     IN unsigned int uWaitTime   
     )
 {
-	int Retval;
-	OsxUart_T *pUart = (OsxUart_T *)hUart;
-	int iRead;
-	unsigned int uTotal;
-	unsigned int uStart;
+    int Retval;
+    OsxUart_T *pUart = (OsxUart_T *)hUart;
+    int iRead;
+    unsigned int uTotal;
+    unsigned int uStart;
 
-	DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
+    DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
 
-	uTotal = 0;
-	uStart = PortableGetTick();
+    uTotal = 0;
+    uStart = PortableGetTick();
 
-	for ( ; ; )
-	{
-		iRead = read(pUart->hPort, pBuff+uTotal, uLength-uTotal);
-		Retval = iRead != -1 ? S_OK : S_OK;
-    	CHECK_RETVAL(Retval, ExitOnFailure);                                                            
+    for ( ; ; )
+    {
+        iRead = read(pUart->hPort, pBuff+uTotal, uLength-uTotal);
+        Retval = iRead != -1 ? S_OK : S_OK;
+        CHECK_RETVAL(Retval, ExitOnFailure);                                                            
 
-		uTotal = uTotal + iRead;
+        uTotal = uTotal + iRead;
 
-		if (uTotal == uLength)
-		{
-			break;
-		}
+        if (uTotal == uLength)
+        {
+            break;
+        }
 
-		if (PortableGetTick() - uStart > uWaitTime)
-		{
-			Retval = (uTotal) ? S_OK : E_TIMEOUT;
-			break;
-		}
+        if (PortableGetTick() - uStart > uWaitTime)
+        {
+            Retval = (uTotal) ? S_OK : E_TIMEOUT;
+            break;
+        }
 
-		PortableSleep(100);
-	}
+        PortableSleep(100);
+    }
 
-	if (puRead)
-	{
-		*puRead = uTotal;
-	}
+    if (puRead)
+    {
+        *puRead = uTotal;
+    }
 
 ExitOnFailure:
 
-	return Retval;
+    return Retval;
 }
 
 int
 OsxUartWrite(
-	IN uhandle_t	hUart,
+    IN uhandle_t    hUart,
     IO const void   *pBuff,     
     IN unsigned int uLength,    
     OUT unsigned int *puWritten,   
     IN unsigned int uWaitTime   
     )
 {
-	int Retval;
-	OsxUart_T *pUart = (OsxUart_T *)hUart;
-	size_t Written;
-	unsigned int uTotal;
-	unsigned int uStart;
+    int Retval;
+    OsxUart_T *pUart = (OsxUart_T *)hUart;
+    size_t Written;
+    unsigned int uTotal;
+    unsigned int uStart;
 
-	DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
+    DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
 
-	uTotal = 0;
-	uStart = PortableGetTick();
+    uTotal = 0;
+    uStart = PortableGetTick();
 
-	for ( ; ; )
-	{
-		Written = write(pUart->hPort, pBuff+uTotal, uLength-uTotal);
-		Retval = Written != -1 ? S_OK : E_FAIL;
-    	CHECK_RETVAL(Retval, ExitOnFailure);                                                            
+    for ( ; ; )
+    {
+        Written = write(pUart->hPort, pBuff+uTotal, uLength-uTotal);
+        Retval = Written != -1 ? S_OK : E_FAIL;
+        CHECK_RETVAL(Retval, ExitOnFailure);                                                            
 
-		uTotal = uTotal + Written;
+        uTotal = uTotal + Written;
 
-		if (uTotal == uLength)
-		{
-			Retval = S_OK;
-			break;
-		}
+        if (uTotal == uLength)
+        {
+            Retval = S_OK;
+            break;
+        }
 
-		if (PortableGetTick() - uStart > uWaitTime)
-		{
-			Retval = uTotal ? S_OK : E_TIMEOUT;
-			break;
-		}
-	
-		PortableSleep(100);
-	}
+        if (PortableGetTick() - uStart > uWaitTime)
+        {
+            Retval = uTotal ? S_OK : E_TIMEOUT;
+            break;
+        }
+    
+        PortableSleep(100);
+    }
 
-	if (puWritten)
-	{
-		*puWritten = uTotal;
-	}
+    if (puWritten)
+    {
+        *puWritten = uTotal;
+    }
 
 ExitOnFailure:
 
-   	return Retval;
+    return Retval;
 }
 
 int
 OsxUartSetStatus(
-	IN uhandle_t	hUart,
+    IN uhandle_t    hUart,
     IN unsigned int uState
     )
 {
-	int Retval;
-	OsxUart_T *pUart = (OsxUart_T *)hUart;
+    int Retval;
+    OsxUart_T *pUart = (OsxUart_T *)hUart;
 
-	DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
+    DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
 
-	Retval = pUart ? S_OK : E_INVALIDARG;
+    Retval = pUart ? S_OK : E_INVALIDARG;
     CHECK_RETVAL(Retval, ExitOnFailure);                                                            
 
-	switch(uState)
-	{
-	case UART_STATUS_SETRTS:
-    	Retval = ioctl(pUart->hPort, TIOCMGET, &uState);                                                              
-    	CHECK_RETVAL(Retval, ExitOnFailure);                                                            
-		uState = uState | TIOCM_RTS;
-    	Retval = ioctl(pUart->hPort, TIOCMSET, &uState);                                                              
-    	CHECK_RETVAL(Retval, ExitOnFailure);                                                            
-		break;
+    switch(uState)
+    {
+    case UART_STATUS_SETRTS:
+        Retval = ioctl(pUart->hPort, TIOCMGET, &uState);                                                              
+        CHECK_RETVAL(Retval, ExitOnFailure);                                                            
+        uState = uState | TIOCM_RTS;
+        Retval = ioctl(pUart->hPort, TIOCMSET, &uState);                                                              
+        CHECK_RETVAL(Retval, ExitOnFailure);                                                            
+        break;
 
-	case UART_STATUS_CLRRTS:                                                                       
-    	Retval = ioctl(pUart->hPort, TIOCMGET, &uState);                                                              
-    	CHECK_RETVAL(Retval, ExitOnFailure);                                                            
-		uState = uState & ~TIOCM_RTS;
-    	Retval = ioctl(pUart->hPort, TIOCMSET, &uState);                                                              
-    	CHECK_RETVAL(Retval, ExitOnFailure);                                                            
-		break;
+    case UART_STATUS_CLRRTS:                                                                       
+        Retval = ioctl(pUart->hPort, TIOCMGET, &uState);                                                              
+        CHECK_RETVAL(Retval, ExitOnFailure);                                                            
+        uState = uState & ~TIOCM_RTS;
+        Retval = ioctl(pUart->hPort, TIOCMSET, &uState);                                                              
+        CHECK_RETVAL(Retval, ExitOnFailure);                                                            
+        break;
 
-	case UART_STATUS_SETDTR:                                                                       
-		uState = 0;
-    	Retval = ioctl(pUart->hPort, TIOCSDTR, &uState);                                                              
-    	CHECK_RETVAL(Retval, ExitOnFailure);                                                            
-		break;
+    case UART_STATUS_SETDTR:                                                                       
+        uState = 0;
+        Retval = ioctl(pUart->hPort, TIOCSDTR, &uState);                                                              
+        CHECK_RETVAL(Retval, ExitOnFailure);                                                            
+        break;
 
-	case UART_STATUS_CLRDTR: 
-		uState = 0;
-    	Retval = ioctl(pUart->hPort, TIOCCDTR, &uState);                                                              
-    	CHECK_RETVAL(Retval, ExitOnFailure);                                                            
-		break;
+    case UART_STATUS_CLRDTR: 
+        uState = 0;
+        Retval = ioctl(pUart->hPort, TIOCCDTR, &uState);                                                              
+        CHECK_RETVAL(Retval, ExitOnFailure);                                                            
+        break;
 
-	default:
-		Retval = E_INVALIDARG;
-    	CHECK_RETVAL(Retval, ExitOnFailure);                                                            
-		break;
-	}
+    default:
+        Retval = E_INVALIDARG;
+        CHECK_RETVAL(Retval, ExitOnFailure);                                                            
+        break;
+    }
 
 ExitOnFailure:
                                                                                                     
@@ -383,43 +383,43 @@ ExitOnFailure:
 
 int
 OsxUartGetStatus(
-	IN uhandle_t	hUart,
+    IN uhandle_t    hUart,
     OUT unsigned int *puState
     )
 {
-	int Retval;
-	int iStatus;
-	OsxUart_T *pUart = (OsxUart_T *)hUart;
+    int Retval;
+    int iStatus;
+    OsxUart_T *pUart = (OsxUart_T *)hUart;
 
-	DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
+    DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
 
-	Retval = pUart && puState ? S_OK : E_INVALIDARG;
+    Retval = pUart && puState ? S_OK : E_INVALIDARG;
     CHECK_RETVAL(Retval, ExitOnFailure);                                                            
                                                                                                     
     Retval = ioctl(pUart->hPort, TIOCMGET, &iStatus);                                                               
     CHECK_RETVAL(Retval, ExitOnFailure);                                                            
 
-	*puState = 0;
+    *puState = 0;
 
-	if (iStatus & TIOCM_DSR)
-	{
-		*puState = *puState | UART_STATUS_DSR;
-	}
+    if (iStatus & TIOCM_DSR)
+    {
+        *puState = *puState | UART_STATUS_DSR;
+    }
 
-	if (iStatus & TIOCM_CTS) 
-	{                                                                     
-		*puState = *puState | UART_STATUS_CTS;
-	}
+    if (iStatus & TIOCM_CTS) 
+    {                                                                     
+        *puState = *puState | UART_STATUS_CTS;
+    }
 
-	if (iStatus & TIOCM_RNG) 
-	{                                                                    
-		*puState = *puState | UART_STATUS_RI;
-	}
+    if (iStatus & TIOCM_RNG) 
+    {                                                                    
+        *puState = *puState | UART_STATUS_RI;
+    }
 
-	if (iStatus & TIOCM_CD) 
-	{                                                                      
-		*puState = *puState | UART_STATUS_DCD;
-	}
+    if (iStatus & TIOCM_CD) 
+    {                                                                      
+        *puState = *puState | UART_STATUS_DCD;
+    }
 
 ExitOnFailure:
 
@@ -440,7 +440,7 @@ OsxUartLookup(
     int Retval = E_FAIL;
     int i;
 
-	DBG_MSG(DBG_NONE, "%s\n", __FUNCTION__);
+    DBG_MSG(DBG_NONE, "%s\n", __FUNCTION__);
 
     *puSpecific = 0;
 
@@ -467,7 +467,7 @@ OsxUartConvertSettings(
 {
     int Retval;
 
-	DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
+    DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
 
     Retval = OsxUartLookup(*puRate, gBaudTable, COUNTOF(gBaudTable), puRate);
     CHECK_RETVAL(Retval, ExitOnFailure);
@@ -483,6 +483,6 @@ OsxUartConvertSettings(
 
 ExitOnFailure:
 
-	return Retval;
+    return Retval;
 }
 

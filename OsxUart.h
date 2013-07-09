@@ -8,12 +8,12 @@ OsxUartCtor(
 
 void
 OsxUartDtor(
-    IN uhandle_t 	h       
+    IN uhandle_t    h       
     );
 
 int
 OsxUartOpen(
-    IN uhandle_t	h,
+    IN uhandle_t    h,
     IN const char   *pName,
     IN unsigned int uRate,
     IN unsigned int uDataBits,
@@ -23,12 +23,12 @@ OsxUartOpen(
 
 void
 OsxUartClose(
-	IN uhandle_t	h
+    IN uhandle_t    h
     );
 
 int
 OsxUartRead(
-	IN uhandle_t	h,
+    IN uhandle_t    h,
     IO void         *pBuff,     
     IN unsigned int uLength,    
     OUT unsigned int *puRead,   
@@ -37,7 +37,7 @@ OsxUartRead(
 
 int
 OsxUartWrite(
-	IN uhandle_t	h,
+    IN uhandle_t    h,
     IO const void   *pBuff,     
     IN unsigned int uLength,    
     OUT unsigned int *puWritten,   
@@ -46,13 +46,13 @@ OsxUartWrite(
 
 int
 OsxUartSetStatus(
-	IN uhandle_t	h,
+    IN uhandle_t    h,
     IN unsigned int uState
     );
 
 int
 OsxUartGetStatus(
-	IN uhandle_t	h,
+    IN uhandle_t    h,
     OUT unsigned int *puState
     );
 
