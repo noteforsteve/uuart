@@ -29,18 +29,18 @@ PortableSleep(
 
 int 
 PortableKeyRead(
-	void
-	)
+    void
+    )
 {
-	return _getch();
+    return _getch();
 }
 
 int 
 PortableKeyHit(
-	void
-	)
+    void
+    )
 {
-	return _kbhit();
+    return _kbhit();
 }
 
 #endif
@@ -60,8 +60,8 @@ PortableKeyHit(
 
 unsigned int 
 PortableGetTick(
-	void
-	)
+    void
+    )
 {
     struct timeval tv;
     gettimeofday(&tv,NULL);
@@ -73,59 +73,59 @@ PortableSleep(
     unsigned int t
     )
 {
-	usleep(t*1000);
+    usleep(t*1000);
 }
 
 int 
 PortableKeyWait(
-	int 			*pch,
-	unsigned int 	uMaxWait
-	)
+    int             *pch,
+    unsigned int    uMaxWait
+    )
 {
-	int Retval;
-	struct termios term;
-	struct termios oldt;
+    int Retval;
+    struct termios term;
+    struct termios oldt;
     int bytesWaiting;
-	unsigned int uStartTick;
+    unsigned int uStartTick;
 
-	/* Get current termio state */
-	tcgetattr(STDIN_FILENO, &term);
-	oldt = term;
+    /* Get current termio state */
+    tcgetattr(STDIN_FILENO, &term);
+    oldt = term;
 
-	/* Disable blocking and echo */
+    /* Disable blocking and echo */
     term.c_lflag &= ~(ICANON | ECHO);
     tcsetattr(STDIN_FILENO, TCSANOW, &term);
 
-	/* Get the start time */
-	uStartTick = PortableGetTick();
+    /* Get the start time */
+    uStartTick = PortableGetTick();
 
-	for ( ; ; )
-	{
-		/* Check if characters waiting in stdin */
-    	ioctl(STDIN_FILENO, FIONREAD, &bytesWaiting);
-	
-		if (bytesWaiting)
-		{
-			*pch = getchar();
-			Retval = 0;
-			break;
-		}
-	
-		if (uMaxWait != 0xFFFFFFFF)
-		{	
-			/* Has the max time elappsed */
-			if (PortableGetTick() - uStartTick > uMaxWait)
-			{
-				Retval = -1;
-				break;
-			}
-		}
-	}
+    for ( ; ; )
+    {
+        /* Check if characters waiting in stdin */
+        ioctl(STDIN_FILENO, FIONREAD, &bytesWaiting);
+    
+        if (bytesWaiting)
+        {
+            *pch = getchar();
+            Retval = 0;
+            break;
+        }
+    
+        if (uMaxWait != 0xFFFFFFFF)
+        {   
+            /* Has the max time elappsed */
+            if (PortableGetTick() - uStartTick > uMaxWait)
+            {
+                Retval = -1;
+                break;
+            }
+        }
+    }
   
-	/* Restore the termio settings */ 
+    /* Restore the termio settings */ 
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 
-	return Retval;
+    return Retval;
 }
 
 

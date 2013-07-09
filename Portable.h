@@ -33,8 +33,8 @@ PortableSleep(
 
 int 
 PortableKeyWait(
-	int 			*pch,
-	unsigned int 	uMaxWait
-	);
+    int             *pch,
+    unsigned int    uMaxWait
+    );
 
 #endif
