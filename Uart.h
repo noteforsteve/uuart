@@ -1,8 +1,6 @@
 #ifndef UART_H
 #define UART_H
 
-#define UART_TESTS
-
 #define UART_RATE_9600      9600
 #define UART_RATE_14400     14400
 #define UART_RATE_19200     19200
@@ -44,12 +42,12 @@ UartCtor(
 
 void
 UartDtor(
-    IN uhandle_t   	hUart
+    IN uhandle_t    hUart
     );
 
 int
 UartOpen(
-    IN uhandle_t   	hUart,
+    IN uhandle_t    hUart,
     IN const char   *pName,
     IN unsigned int uRate,
     IN unsigned int uDataBits,
@@ -59,7 +57,7 @@ UartOpen(
 
 void
 UartClose(
-    IN uhandle_t   	hUart
+    IN uhandle_t    hUart
     );
 
 /*
@@ -77,7 +75,7 @@ UartClose(
  */
 int
 UartRead(
-    IN uhandle_t   	hUart,     	/* Uart instance handle 					*/
+    IN uhandle_t    hUart,      /* Uart instance handle                     */
     IO void         *pBuff,     /* Pointer where to return bytes read       */
     IN unsigned int uLength,    /* Length of the pBuff in bytes             */
     OUT unsigned int *puRead,   /* Can be NULL, return bytes read           */
@@ -99,7 +97,7 @@ UartRead(
  */
 int
 UartWrite(
-    IN uhandle_t   	hUart,         	/* Uart instance handle 					*/
+    IN uhandle_t    hUart,          /* Uart instance handle                     */
     OUT const void  *pBuff,         /* Pointer where to return bytes read       */
     IN unsigned int uLength,        /* Length of the pBuff in bytes             */
     OUT unsigned int *puWritten,    /* Can be NULL, return bytes written        */
@@ -111,8 +109,8 @@ UartWrite(
  */
 int
 UartSetStatus(
-    IN uhandle_t   	hUart,         	/* Uart instance handle 					*/
-    IN unsigned int uState			/* New modem status to set 					*/
+    IN uhandle_t    hUart,          /* Uart instance handle                     */
+    IN unsigned int uState          /* New modem status to set                  */
     );
 
 /*
@@ -120,21 +118,21 @@ UartSetStatus(
  */
 int
 UartGetStatus(
-    IN uhandle_t   	hUart,         	/* Uart instance handle 					*/
-    OUT unsigned int *puState       /* Current state of the modems signals 		*/
+    IN uhandle_t    hUart,          /* Uart instance handle                     */
+    OUT unsigned int *puState       /* Current state of the modems signals      */
     );
 
 #if defined (UART_TESTS)
 
 int
 UartTest(
-	IN const char 	*pszPort
-	);
+    IN const char   *pszPort
+    );
 
 int
 UartTest1(
-	IN const char 	*pszPort
-	);
+    IN const char   *pszPort
+    );
 
 #endif
 

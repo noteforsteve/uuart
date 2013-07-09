@@ -1,4 +1,4 @@
-CFLAGS=-Wall -g -DDEBUG -DOSX
+CFLAGS=-Wall -g -DDEBUG -DOSX -DUART_TESTS
 
 all:uuart.app
 
