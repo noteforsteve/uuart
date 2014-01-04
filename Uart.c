@@ -302,6 +302,9 @@ UartTest(
     Retval = ((uStatus & UART_STATUS_MASK) == 0) ? S_OK : E_FAIL;
     CHECK_RETVAL(Retval, ExitOnFailure);                                                    
 
+    /* Change the port to a blocking call */
+
+
 ExitOnFailure:
 
     if (SUCCEEDED(Retval))
