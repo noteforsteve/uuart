@@ -25,7 +25,7 @@ main(
 	Retval = ac == 2 ? S_OK : E_FAIL;
 	CHECK_RETVAL(Retval, ExitOnFailure);
 
-	Retval = UartTest1(av[1]);
+	Retval = UartTest(av[1]);
 	CHECK_RETVAL(Retval, ExitOnFailure);
 
 ExitOnFailure:

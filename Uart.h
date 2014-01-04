@@ -129,11 +129,6 @@ UartTest(
     IN const char   *pszPort
     );
 
-int
-UartTest1(
-    IN const char   *pszPort
-    );
-
 #endif
 
 #endif

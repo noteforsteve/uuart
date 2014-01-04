@@ -211,37 +211,6 @@ ExitOnFailure:
 /*** Uart Test ****************************************************************/
 #if defined (UART_TESTS)
 
-void
-UartTestShowModemStatus(
-    IN unsigned int uModemStatus
-    )
-{
-    printf("ModemStatus %04x - ", uModemStatus);
-
-    if (uModemStatus & UART_STATUS_CTS)
-        printf(" cts ");
-    if (uModemStatus & UART_STATUS_DSR)
-        printf(" dsr ");
-    if (uModemStatus & UART_STATUS_RI)
-        printf(" ri ");
-    if (uModemStatus & UART_STATUS_DCD)
-        printf(" dcd ");
-    printf("\n");
-}
-
-void
-UartTestToUpper(
-    IN char         *p,
-    IN unsigned int uLen
-    )
-{
-    for ( ; uLen; uLen = uLen - 1)
-    {
-        *p = (char)toupper(*p);
-        p = p + 1;
-    }
-}
-
 /* Show state of modem status signals */ 
 int 
 UartTest(
@@ -251,51 +220,20 @@ UartTest(
     int Retval;
     uhandle_t hUart;
     unsigned int uStatus;
-
-    DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
-
-    Retval = UartCtor(&hUart);
-    CHECK_RETVAL(Retval, ExitOnFailure);
-
-    Retval = UartOpen(hUart, 
-                      pszPort,
-                      UART_RATE_57600, 
-                      UART_DATA_BITS_8, 
-                      UART_PARITY_NONE, 
-                      UART_STOP_1);
-    CHECK_RETVAL(Retval, ExitOnFailure);
-
-    for ( ; ; )
-    {
-        Retval = UartGetStatus(hUart, &uStatus);
-        CHECK_RETVAL(Retval, ExitOnFailure);
-
-        UartTestShowModemStatus(uStatus);
-
-        PortableSleep(1000);
-    }
-  
-ExitOnFailure:
-
-    UartDtor(hUart);
-
-    return Retval;
-}
-
-/* Echo back recevied data in upper case */
-int 
-UartTest1(
-    IN const char *pszPort
-    )
-{
-    int Retval;
-    uhandle_t hUart;
-    char Buff[256];
-    unsigned int BytesRead;
+    char WriteBuff[256];
+    char ReadBuff[256];
+    unsigned int Len;
+    unsigned int BytesRead; 
     unsigned int BytesWritten;
 
     DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
 
+    printf("UartTest: Starting...\n");
+    printf("UartTest: Signals must be in loop back configuration\n");
+    printf("UartTest: TXD->RXD\n");
+    printf("UartTest: RTS->CTS\n");
+    printf("UartTest: DTR->DSR\n");
+
     Retval = UartCtor(&hUart);
     CHECK_RETVAL(Retval, ExitOnFailure);
 
@@ -307,20 +245,73 @@ UartTest1(
                       UART_STOP_1);
     CHECK_RETVAL(Retval, ExitOnFailure);
 
-    for ( ; ; )
-    {
-        Retval = UartRead(hUart, Buff, sizeof(Buff), &BytesRead, 1000);
-    
-        if (BytesRead)
-        {   
-            UartTestToUpper(Buff, BytesRead);
+    /* Create the loop back message */
+    strcpy(WriteBuff, "Loop Back Message");
+    Len = strlen(WriteBuff); 
 
-            Retval = UartWrite(hUart, Buff, BytesRead, &BytesWritten, 1000);
-            CHECK_RETVAL(Retval, ExitOnFailure);
-        }
-    }
-  
+    /* Send Loop back message */
+    Retval = UartWrite(hUart, WriteBuff, Len, &BytesWritten, 1000);                        
+    CHECK_RETVAL(Retval, ExitOnFailure);                                                    
+    
+    /* Check the loop back message was sent */
+    Retval = (Retval == S_OK && BytesWritten == Len) ? S_OK : E_FAIL;
+    CHECK_RETVAL(Retval, ExitOnFailure);                                                    
+
+    /* Read the loop back message */
+    Retval = UartRead(hUart, ReadBuff, sizeof(ReadBuff), &BytesRead, 1000);
+    CHECK_RETVAL(Retval, ExitOnFailure);                                                    
+
+    /* Check the read length matches the loop back message */
+    Retval = (Retval == S_OK && BytesRead == Len) ? S_OK : E_FAIL;    
+    CHECK_RETVAL(Retval, ExitOnFailure);                                                    
+
+    /* Check the contents of the loop back message was read correctly */
+    Retval = memcmp(WriteBuff, ReadBuff, Len) ? E_FAIL : S_OK;
+    CHECK_RETVAL(Retval, ExitOnFailure);                                                    
+
+    /* Set the status signals to a known state */
+    Retval = UartSetStatus(hUart, UART_STATUS_SETRTS);
+    CHECK_RETVAL(Retval, ExitOnFailure);                                                    
+
+    Retval = UartSetStatus(hUart, UART_STATUS_SETDTR);
+    CHECK_RETVAL(Retval, ExitOnFailure);                                                    
+
+    /* Get the current modem state state */
+    Retval = UartGetStatus(hUart, &uStatus);
+    CHECK_RETVAL(Retval, ExitOnFailure);                                                    
+
+    /* Check against known state */
+    Retval = ((uStatus & UART_STATUS_MASK) == (UART_STATUS_CTS|UART_STATUS_DSR)) ? S_OK : E_FAIL;
+    CHECK_RETVAL(Retval, ExitOnFailure);                                                    
+
+    Retval = UartSetStatus(hUart, UART_STATUS_CLRRTS);
+    CHECK_RETVAL(Retval, ExitOnFailure);                                                    
+
+    Retval = UartGetStatus(hUart, &uStatus);
+    CHECK_RETVAL(Retval, ExitOnFailure);                                                    
+
+    Retval = ((uStatus & UART_STATUS_MASK) == (UART_STATUS_DSR)) ? S_OK : E_FAIL;
+    CHECK_RETVAL(Retval, ExitOnFailure);                                                    
+
+    Retval = UartSetStatus(hUart, UART_STATUS_CLRDTR);
+    CHECK_RETVAL(Retval, ExitOnFailure);                                                    
+
+    Retval = UartGetStatus(hUart, &uStatus);
+    CHECK_RETVAL(Retval, ExitOnFailure);                                                    
+
+    Retval = ((uStatus & UART_STATUS_MASK) == 0) ? S_OK : E_FAIL;
+    CHECK_RETVAL(Retval, ExitOnFailure);                                                    
+
 ExitOnFailure:
+
+    if (SUCCEEDED(Retval))
+    {
+        printf("UartTest: passed\n");
+    }
+    else
+    {
+        printf("UartTest: failed\n");
+    }
 
     UartDtor(hUart);
 
