@@ -121,6 +121,8 @@ UartRead(
     Retval = hUart && pBuff ? S_OK : E_INVALIDARG;
     CHECK_RETVAL(Retval, ExitOnFailure);
 
+    if (puRead) *puRead = 0;
+
 #if OS_TYPE == OS_TYPE_WINDOWS
     Retval = WinUartRead(hUart, pBuff, uLength, puRead, uWaitTime);
 #elif (OS_TYPE == OS_TYPE_OSX)
@@ -147,6 +149,8 @@ UartWrite(
 
     Retval = hUart && pBuff ? S_OK : E_INVALIDARG;
     CHECK_RETVAL(Retval, ExitOnFailure);
+
+    if (puWritten) *puWritten = 0;
 
 #if OS_TYPE == OS_TYPE_WINDOWS
     Retval = WinUartWrite(hUart, pBuff, uLength, puWritten, uWaitTime);
@@ -207,6 +211,31 @@ ExitOnFailure:
     return Retval;
 }
 
+int
+UartSetTimeouts(
+    IN uhandle_t    hUart,          /* Uart instance handle                     */
+    IN unsigned int ReadTimeout,    /* Minimum read timeout period              */   
+    IN unsigned int WriteTimeout    /* Minimum write timeout period             */
+    )
+{
+    int Retval;
+
+    DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
+
+    /* The read and write timeout must be atleast 1 */
+    Retval = hUart && ReadTimeout && WriteTimeout ? S_OK : E_INVALIDARG;
+    CHECK_RETVAL(Retval, ExitOnFailure);
+
+#if OS_TYPE == OS_TYPE_WINDOWS
+    Retval = WinUartSetTimeouts(hUart, ReadTimeout, WriteTimeout);
+#elif (OS_TYPE == OS_TYPE_OSX)
+    Retval = OsxUartSetTimeouts(hUart, ReadTimeout, WriteTimeout);
+#endif
+
+ExitOnFailure:
+
+    return Retval;
+}
 
 /*** Uart Test ****************************************************************/
 #if defined (UART_TESTS)
@@ -225,6 +254,7 @@ UartTest(
     unsigned int Len;
     unsigned int BytesRead; 
     unsigned int BytesWritten;
+    unsigned int StartTick;
 
     DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
 
@@ -302,8 +332,30 @@ UartTest(
     Retval = ((uStatus & UART_STATUS_MASK) == 0) ? S_OK : E_FAIL;
     CHECK_RETVAL(Retval, ExitOnFailure);                                                    
 
-    /* Change the port to a blocking call */
+    /* Test the set timeouts */
+    Retval = UartSetTimeouts(hUart, 100, 100);
+    CHECK_RETVAL(Retval, ExitOnFailure);                                                    
 
+    StartTick = PortableGetTick();
+    Retval = UartRead(hUart, ReadBuff, sizeof(ReadBuff), &BytesRead, 0);
+
+    Retval = Retval == E_TIMEOUT ? S_OK : E_FAIL;
+    CHECK_RETVAL(Retval, ExitOnFailure);                                                    
+    
+    Retval = (PortableGetTick() - StartTick) < 150 ? S_OK : E_FAIL;
+    CHECK_RETVAL(Retval, ExitOnFailure);                                                    
+
+    Retval = UartSetTimeouts(hUart, 500, 500);
+    CHECK_RETVAL(Retval, ExitOnFailure);                                                    
+
+    StartTick = PortableGetTick();
+    Retval = UartRead(hUart, ReadBuff, sizeof(ReadBuff), &BytesRead, 0);
+
+    Retval = Retval == E_TIMEOUT ? S_OK : E_FAIL;
+    CHECK_RETVAL(Retval, ExitOnFailure);                                                    
+
+    Retval = (PortableGetTick() - StartTick) < 550 ? S_OK : E_FAIL;
+    CHECK_RETVAL(Retval, ExitOnFailure);                                                    
 
 ExitOnFailure:
 

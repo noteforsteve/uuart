@@ -68,6 +68,8 @@ const WinEntry_T gModemStatusTable [] =
 typedef struct 
 {
     HANDLE      hPort;
+    unsigned int ReadTimeout;
+    unsigned int WriteTimeout;
 } WinUart_T;
 
 /*** Function Prototypes *****************************************************/
@@ -165,9 +167,9 @@ WinUartOpen(
 
     /* Set the com timeouts */
     CommTimeouts.ReadIntervalTimeout            = 0;
-    CommTimeouts.ReadTotalTimeoutConstant       = DEFAULT_READ_TIMEOUT;
+    CommTimeouts.ReadTotalTimeoutConstant       = pUart->ReadTimeout;
     CommTimeouts.ReadTotalTimeoutMultiplier     = 0;
-    CommTimeouts.WriteTotalTimeoutConstant      = DEFAULT_WRITE_TIMEOUT;
+    CommTimeouts.WriteTotalTimeoutConstant      = pUart->WriteTimeout;
     CommTimeouts.WriteTotalTimeoutMultiplier    = 0;
 
     /* Push down the setting */
@@ -211,7 +213,7 @@ WinUartOpen(
     dcb.EvtChar         = 0;                    /* Received Event character        */
     dcb.wReserved1      = 0;                    /* Fill for now.                   */
 
-    // Set the com state, i.e. new rate, settings
+    /* Set the com state, i.e. new rate, settings */
     Retval = SetCommState(pUart->hPort, &dcb) ? S_OK : E_FAIL;
     CHECK_RETVAL(Retval, ExitOnFailure);
 
@@ -219,7 +221,7 @@ WinUartOpen(
 
 ExitOnFailure:
 
-    // Something failed close the port, if opened
+    /* Something failed close the port, if opened */
     WinUartClose(hUart);
 
     return Retval;
@@ -444,6 +446,29 @@ WinUartGetStatus(
     {
         *puState = *puState | UART_STATUS_DCD;
     }
+
+ExitOnFailure:
+
+    return Retval;
+}
+
+int 
+WinUartSetTimeouts(
+    IN uhandle_t    hUart,
+    IN unsigned int ReadTimeout,
+    IN unsigned int WriteTimeout
+    )
+{
+    int Retval;
+    WinUart_T *pUart = (WinUart_T *)hUart;
+
+    DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
+
+    Retval = pUart && ReadTimeout && WriteTimeout ? S_OK : E_INVALIDARG;
+    CHECK_RETVAL(Retval, ExitOnFailure);
+
+    pUart->ReadTimeout = ReadTimeout;
+    pUart->WriteTimeout = WriteTimeout;
 
 ExitOnFailure:
 

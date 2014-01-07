@@ -122,6 +122,27 @@ UartGetStatus(
     OUT unsigned int *puState       /* Current state of the modems signals      */
     );
 
+/* 
+ * Set the timeouts for the read and write calls
+ *
+ * ReadTimeout - UartRead returns immediatly when the number of bytes read matches 
+ * the request read size.  If the number of bytes read is less then the requested 
+ * size, the UartRead function will wait for additional bytes to arrive or the maximum 
+ * of either ReadTimeout or the uWaitTime parameter passed to the call. 
+ * 
+ * WriteTimeout - UartWrite returns immediatly when the number of bytes written matches 
+ * the request write size.  If the number of bytes written is less then the requested 
+ * size, the UartWrite function will wait for additional bytes to be written or the maximum 
+ * of either WriteTimeout or the uWaitTime parameter passed to the call. 
+ * 
+ */
+int
+UartSetTimeouts(
+    IN uhandle_t    hUart,          /* Uart instance handle                     */
+    IN unsigned int ReadTimeout,    /* Minimum read timeout period              */   
+    IN unsigned int WriteTimeout    /* Minimum write timeout period             */
+    );
+
 #if defined (UART_TESTS)
 
 int

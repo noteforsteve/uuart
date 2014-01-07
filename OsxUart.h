@@ -56,5 +56,12 @@ OsxUartGetStatus(
     OUT unsigned int *puState
     );
 
+int 
+OsxUartSetTimeouts(
+    IN uhandle_t    h,
+    IN unsigned int ReadTimeout,
+    IN unsigned int WriteTimeout
+    );
+
 #endif
 

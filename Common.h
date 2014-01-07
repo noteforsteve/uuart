@@ -14,24 +14,18 @@
 #define COUNTOF(a) (sizeof(a)/sizeof(*a))
 #endif
 
-#define IN		/* Parameter is an input 				*/
-#define IO		/* Parameter is both input and output 	*/
-#define OUT		/* Parameter is strictly an output		*/
-#define ORPHAN 	/* Parameter is orphaned to the caller 	*/
-#define ADOPT  	/* Callee adopts the parameter 			*/
-#define OPTIONAL /* The out parameter is optional       */
+#define IN		    /* Parameter is an input 				*/
+#define IO		    /* Parameter is both input and output 	*/
+#define OUT		    /* Parameter is strictly an output		*/
+#define ORPHAN 	    /* Parameter is orphaned to the caller 	*/
+#define ADOPT  	    /* Callee adopts the parameter 			*/
+#define OPTIONAL    /* The out parameter is optional        */
 
 /* Useful 16 bit value macros */
 #define WORD_LOW_HALF(w)		(((uint16_t)(w) >> 0)& 0x00FF)
 #define WORD_HIGH_HALF(w)		(((uint16_t)(w) >> 8) & 0x00FF)
-#define WORD_MAKE(msb,lsb)		(((uint16_t)(msb) << 8) | ((uint16)(lsb) << 0))
-
-#if !defined (HTONS)
-/* Host to network short */
-#define HTONS(v)\
-         ((((v) >> 8) & 0x00FF) |\
-          (((v) <<  8) & 0xFF00))
-#endif
+#define WORD_MAKE(msb,lsb)		(((uint16_t)(msb) << 8) |\
+                                 ((uint16_t)(lsb) << 0))
 
 /* Useful 32 bit value macros */
 #define DWORD_LOW_HALF(l)		(((uint32_t)(l) >>  0) & 0x0000FFFF) 
@@ -41,16 +35,27 @@
                                     ((uint32_t)(b3) <<  8) |\
                                     ((uint32_t)(b4) << 0))
 
+/* 16 bit byte swap */
+#if !defined (HTONS)
+
+#define HTONS(v)\
+         ((((v) >> 8) & 0x00FF) |\
+          (((v) <<  8) & 0xFF00))
+
+#endif
+
+/* 32 bit byte swap */
 #if !defined (HTONL)
 
-/* Host to network long */
 #define HTONL(v)\
          ((((v) >> 24) & 0x000000FF) |\
           (((v) >>  8) & 0x0000FF00) |\
           (((v) <<  8) & 0x00FF0000) |\
           (((v) << 24) & 0xFF000000))
+
 #endif
 
+#if !defined(_STDINT_H_)
 
 typedef unsigned char   uint8_t;
 typedef unsigned short  uint16_t;
@@ -58,36 +63,27 @@ typedef unsigned int    uint32_t;
 typedef signed char     int8_t;
 typedef short           int16_t;
 typedef int             int32_t;
+
+#endif
+
 typedef unsigned long   uhandle_t;
 
 /******************************************************************************/
 
-#if !defined (S_OK)
+#if defined (OSX)
+
 #define S_OK 			0
-#endif
-
-#if !defined (S_FALSE)
 #define S_FALSE			1
-#endif
-
 #define S_SECTIONEND	2
 #define S_COMMENT		3
 #define S_BLANK			4
 
-#if !defined (E_FAIL)
 #define E_FAIL			-1
-#endif
-
-#if !defined (E_NOTIMPL)
 #define E_NOTIMPL		-2
-#endif
-
 #define E_NOMEMORY 		-3
 #define E_ENDOFFILE 	-4
 #define E_RANGE 		-5
-#if !defined (E_INVALIDARG)
 #define E_INVALIDARG 	-6
-#endif
 #define E_FILENOTFOUND 	-7
 #define E_MATCH 		-8
 #define E_BADCMDARG 	-9
@@ -98,17 +94,11 @@ typedef unsigned long   uhandle_t;
 #define E_TIMEOUT       -14
 #define E_PROTOCOL      -15
 #define E_DISCONNECT    -16
+#define E_POINTER       -17
 
-#if !defined(E_POINTER)
-#define E_POINTER       -15
-#endif
-
-#if !defined(SUCCEEDED)
 #define SUCCEEDED(ret) ((ret) >= 0)
-#endif
-
-#if !defined(FAILED)
 #define FAILED(ret) ((ret) < 0)
+
 #endif
 
 #define CHECK_RETVAL(ret, label)\
