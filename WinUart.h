@@ -56,5 +56,12 @@ WinUartGetStatus(
     OUT unsigned int *puState
     );
 
+int 
+WinUartSetTimeouts(
+    IN uhandle_t    hUart,
+    IN unsigned int ReadTimeout,
+    IN unsigned int WriteTimeout
+    );
+
 #endif
 

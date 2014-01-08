@@ -1,35 +1,39 @@
-CFLAGS=-Wall -g -DDEBUG -DOSX -DUART_TESTS
+CC=cl
+CFLAGS=/Zi /Od /c /WX /W4 /DDEBUG /DWINDOWS /DUART_TESTS /D_CRT_SECURE_NO_WARNINGS
 
-all:uuart.app
+LINK=link
+LFLAGS=/NOLOGO /DEBUG 
 
-OBJS=Main.o\
-	Debug.o\
-	Common.o\
-	Portable.o\
-	OsxUart.o\
-    Uart.o
+OBJS=common.obj\
+	debug.obj\
+	winuart.obj\
+	uart.obj\
+	portable.obj\
+	main.obj\
 
-uuart.app: $(OBJS)
-	cc $(OBJS) -o uuart.app
+all: uuart.exe
 
-Main.o: Main.h Main.c
-	cc $(CFLAGS) -c Main.c
+main.obj : main.h main.c
+	$(CC) $(CFLAGS) main.c
 
-Uart.o: Uart.h Uart.c
-	cc $(CFLAGS) -c Uart.c
+debug.obj : debug.h debug.c
+	$(CC) $(CFLAGS) debug.c
 
-OsxUart.o: OsxUart.h OsxUart.c
-	cc $(CFLAGS) -c OsxUart.c
+common.obj : common.h common.c
+	$(CC) $(CFLAGS) common.c
 
-Portable.o: Portable.h Portable.c
-	cc $(CFLAGS) -c Portable.c
+winuart.obj : winuart.h winuart.c
+	$(CC) $(CFLAGS) winuart.c
 
-Debug.o: Debug.h Debug.c
-	cc $(CFLAGS) -c Debug.c
+uart.obj : uart.h uart.c
+	$(CC) $(CFLAGS) uart.c
 
-Common.o: Common.h Common.c
-	cc $(CFLAGS) -c Common.c
+portable.obj : portable.h portable.c
+	$(CC) $(CFLAGS) portable.c
 
-clean: 
-	rm *.o *.exe *.app
+uuart.exe : $(OBJS)
+    $(LINK) $(LFLAGS) $** /OUT:$@
+
+clean:
+    del *.exe *.obj *.ilk *.manifest *.pdb *.suo
 

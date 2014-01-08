@@ -98,15 +98,20 @@ WinUartCtor(
     )
 {
     int Retval;
+    WinUart_T *pUart;
 
     DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
 
-    *phUart = (uhandle_t)malloc(sizeof(WinUart_T));
-    Retval = *phUart ? S_OK : E_NOMEMORY;
+    pUart = malloc(sizeof(WinUart_T));
+    Retval = pUart ? S_OK : E_NOMEMORY;
     CHECK_RETVAL(Retval, ExitOnFailure);
 
-    memset((void *)*phUart, 0, sizeof(WinUart_T));
+    memset(pUart, 0, sizeof(WinUart_T));
     
+    pUart->ReadTimeout = 100;
+    pUart->WriteTimeout = 100;
+    *phUart = (uhandle_t)pUart;
+
 ExitOnFailure:
 
     return Retval;

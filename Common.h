@@ -101,6 +101,12 @@ typedef unsigned long   uhandle_t;
 
 #endif
 
+#if defined(WINDOWS)
+#include <Windows.h>
+#define E_TIMEOUT 	-14
+#define E_NOMEMORY	-3
+#endif
+
 #define CHECK_RETVAL(ret, label)\
     do {\
         if (FAILED(ret))\
