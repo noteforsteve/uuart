@@ -1,6 +1,7 @@
 #ifndef UART_H
 #define UART_H
 
+#define UART_RATE_1200      1200
 #define UART_RATE_9600      9600
 #define UART_RATE_14400     14400
 #define UART_RATE_19200     19200

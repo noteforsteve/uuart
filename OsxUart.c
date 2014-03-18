@@ -29,6 +29,7 @@ typedef struct
                                                                                                     
 const OsxEntry_T gBaudTable [] =                                                                    
 {                                                                                                   
+    {UART_RATE_1200,    B1200},                                                                  
     {UART_RATE_9600,    B9600},                                                                  
     {UART_RATE_14400,   B14400},                                                                 
     {UART_RATE_19200,   B19200},                                                                 
