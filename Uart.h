@@ -43,12 +43,12 @@ UartCtor(
 
 void
 UartDtor(
-    IN uhandle_t    hUart
+    IN uhandle_t   	hUart
     );
 
 int
 UartOpen(
-    IN uhandle_t    hUart,
+    IN uhandle_t   	hUart,
     IN const char   *pName,
     IN unsigned int uRate,
     IN unsigned int uDataBits,
@@ -58,7 +58,7 @@ UartOpen(
 
 void
 UartClose(
-    IN uhandle_t    hUart
+    IN uhandle_t   	hUart
     );
 
 /*
@@ -76,7 +76,7 @@ UartClose(
  */
 int
 UartRead(
-    IN uhandle_t    hUart,      /* Uart instance handle                     */
+    IN uhandle_t   	hUart,     	/* Uart instance handle 					*/
     IO void         *pBuff,     /* Pointer where to return bytes read       */
     IN unsigned int uLength,    /* Length of the pBuff in bytes             */
     OUT unsigned int *puRead,   /* Can be NULL, return bytes read           */
@@ -98,7 +98,7 @@ UartRead(
  */
 int
 UartWrite(
-    IN uhandle_t    hUart,          /* Uart instance handle                     */
+    IN uhandle_t   	hUart,         	/* Uart instance handle 					*/
     OUT const void  *pBuff,         /* Pointer where to return bytes read       */
     IN unsigned int uLength,        /* Length of the pBuff in bytes             */
     OUT unsigned int *puWritten,    /* Can be NULL, return bytes written        */
@@ -110,8 +110,8 @@ UartWrite(
  */
 int
 UartSetStatus(
-    IN uhandle_t    hUart,          /* Uart instance handle                     */
-    IN unsigned int uState          /* New modem status to set                  */
+    IN uhandle_t   	hUart,         	/* Uart instance handle 					*/
+    IN unsigned int uState			/* New modem status to set 					*/
     );
 
 /*
@@ -119,37 +119,29 @@ UartSetStatus(
  */
 int
 UartGetStatus(
-    IN uhandle_t    hUart,          /* Uart instance handle                     */
-    OUT unsigned int *puState       /* Current state of the modems signals      */
+    IN uhandle_t   	hUart,         	/* Uart instance handle 					*/
+    OUT unsigned int *puState       /* Current state of the modems signals 		*/
     );
 
 /* 
- * Set the timeouts for the read and write calls
- *
- * ReadTimeout - UartRead returns immediatly when the number of bytes read matches 
- * the request read size.  If the number of bytes read is less then the requested 
- * size, the UartRead function will wait for additional bytes to arrive or the maximum 
- * of either ReadTimeout or the uWaitTime parameter passed to the call. 
- * 
- * WriteTimeout - UartWrite returns immediatly when the number of bytes written matches 
- * the request write size.  If the number of bytes written is less then the requested 
- * size, the UartWrite function will wait for additional bytes to be written or the maximum 
- * of either WriteTimeout or the uWaitTime parameter passed to the call. 
- * 
+ * Flush both the uart RX and TX queues 
  */
 int
-UartSetTimeouts(
-    IN uhandle_t    hUart,          /* Uart instance handle                     */
-    IN unsigned int ReadTimeout,    /* Minimum read timeout period              */   
-    IN unsigned int WriteTimeout    /* Minimum write timeout period             */
+UartPurge(
+    IN uhandle_t    hUart           /* Uart instance handle 					*/
     );
 
 #if defined (UART_TESTS)
 
 int
 UartTest(
-    IN const char   *pszPort
-    );
+	IN const char 	*pszPort
+	);
+
+int
+UartTest1(
+	IN const char 	*pszPort
+	);
 
 #endif
 

@@ -96,15 +96,15 @@ typedef unsigned long   uhandle_t;
 #define E_DISCONNECT    -16
 #define E_POINTER       -17
 
-#define SUCCEEDED(ret) ((ret) >= 0)
-#define FAILED(ret) ((ret) < 0)
+#define SUCCEEDED(ret)  ((ret) >= 0)
+#define FAILED(ret)     ((ret) < 0)
 
 #endif
 
 #if defined(WINDOWS)
 #include <Windows.h>
-#define E_TIMEOUT 	-14
-#define E_NOMEMORY	-3
+#define E_NOMEMORY	    -3
+#define E_TIMEOUT 	    -14
 #endif
 
 #define CHECK_RETVAL(ret, label)\

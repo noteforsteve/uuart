@@ -24,6 +24,7 @@ typedef struct
 
 const WinEntry_T gBaudTable [] =
 {
+    {UART_RATE_1200,    CBR_1200},
     {UART_RATE_9600,    CBR_9600},
     {UART_RATE_14400,   CBR_14400},
     {UART_RATE_19200,   CBR_19200},
@@ -68,8 +69,6 @@ const WinEntry_T gModemStatusTable [] =
 typedef struct 
 {
     HANDLE      hPort;
-    unsigned int ReadTimeout;
-    unsigned int WriteTimeout;
 } WinUart_T;
 
 /*** Function Prototypes *****************************************************/
@@ -98,20 +97,15 @@ WinUartCtor(
     )
 {
     int Retval;
-    WinUart_T *pUart;
 
-    DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
+	DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
 
-    pUart = malloc(sizeof(WinUart_T));
-    Retval = pUart ? S_OK : E_NOMEMORY;
+    *phUart = (uhandle_t)malloc(sizeof(WinUart_T));
+    Retval = *phUart ? S_OK : E_NOMEMORY;
     CHECK_RETVAL(Retval, ExitOnFailure);
 
-    memset(pUart, 0, sizeof(WinUart_T));
+    memset((void *)*phUart, 0, sizeof(WinUart_T));
     
-    pUart->ReadTimeout = 100;
-    pUart->WriteTimeout = 100;
-    *phUart = (uhandle_t)pUart;
-
 ExitOnFailure:
 
     return Retval;
@@ -122,7 +116,7 @@ WinUartDtor(
     IN uhandle_t    hUart
     )
 {
-    DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
+	DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
     free((void *)hUart);
 }
 
@@ -137,12 +131,12 @@ WinUartOpen(
     )
 {
     int Retval;
-    DCB dcb;
-    COMMTIMEOUTS CommTimeouts;
-    DWORD dwErrors;
+	DCB dcb;
+	COMMTIMEOUTS CommTimeouts;
+	DWORD dwErrors;
     WinUart_T *pUart = (WinUart_T *)hUart;
 
-    DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
+	DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
 
     /* Ensure we are in the closed state */
     Retval = pUart->hPort == NULL ? S_OK : E_FAIL;
@@ -152,81 +146,81 @@ WinUartOpen(
     Retval = WinUartConvertSettings(&uRate, &uBits, &uParity, &uStop);
     CHECK_RETVAL(Retval, ExitOnFailure);
 
-    DBG_MSG(DBG_TRACE, "Port name %s\n", pName);
+	DBG_MSG(DBG_TRACE, "Port name %s\n", pName);
 
-    /* Open the serial port */
-    pUart->hPort = CreateFile(pName,        // Pointer to the name of the port
+	/* Open the serial port */
+	pUart->hPort = CreateFile(pName,        // Pointer to the name of the port
                               GENERIC_READ | GENERIC_WRITE, // Access (read-write) mode 
                               0,            // Share mode
-                              NULL,         // Pointer to the security attribute
-                              OPEN_EXISTING,// How to open the serial port
-                              0,            // Port attributes
-                              NULL);        // Handle to port with attribute to copy
+		                      NULL,         // Pointer to the security attribute
+		                      OPEN_EXISTING,// How to open the serial port
+		                      0,            // Port attributes
+						      NULL);        // Handle to port with attribute to copy
 
-    /* Did an error occurr */
-    Retval = (pUart->hPort != INVALID_HANDLE_VALUE) ? S_OK : E_FAIL;
+	/* Did an error occurr */
+	Retval = (pUart->hPort != INVALID_HANDLE_VALUE) ? S_OK : E_FAIL;
     CHECK_RETVAL(Retval, ExitOnFailure);
 
-    /* Purge cannot be called before the port is opened */
+	/* Purge cannot be called before the port is opened */
     PurgeComm(pUart->hPort, PURGE_TXCLEAR | PURGE_RXCLEAR);
 
     /* Set the com timeouts */
-    CommTimeouts.ReadIntervalTimeout            = 0;
-    CommTimeouts.ReadTotalTimeoutConstant       = pUart->ReadTimeout;
-    CommTimeouts.ReadTotalTimeoutMultiplier     = 0;
-    CommTimeouts.WriteTotalTimeoutConstant      = pUart->WriteTimeout;
-    CommTimeouts.WriteTotalTimeoutMultiplier    = 0;
+	CommTimeouts.ReadIntervalTimeout			= 0;
+	CommTimeouts.ReadTotalTimeoutConstant		= DEFAULT_READ_TIMEOUT;
+	CommTimeouts.ReadTotalTimeoutMultiplier		= 0;
+	CommTimeouts.WriteTotalTimeoutConstant		= DEFAULT_WRITE_TIMEOUT;
+	CommTimeouts.WriteTotalTimeoutMultiplier	= 0;
 
     /* Push down the setting */
-    Retval = SetCommTimeouts(pUart->hPort, &CommTimeouts) ? S_OK : E_FAIL;
+	Retval = SetCommTimeouts(pUart->hPort, &CommTimeouts) ? S_OK : E_FAIL;
     CHECK_RETVAL(Retval, ExitOnFailure);
 
     /* Clear any outstanding errors */
-    Retval = ClearCommError(pUart->hPort, &dwErrors, NULL) ? S_OK : E_FAIL;
+	Retval = ClearCommError(pUart->hPort, &dwErrors, NULL) ? S_OK : E_FAIL;
     CHECK_RETVAL(Retval, ExitOnFailure);
 
     /* Get the current com state */
-    Retval = GetCommState(pUart->hPort, &dcb) ? S_OK : E_FAIL;
+	Retval = GetCommState(pUart->hPort, &dcb) ? S_OK : E_FAIL;
     CHECK_RETVAL(Retval, ExitOnFailure);
 
     /* Setup the device control block */
-    dcb.BaudRate        = uRate;                /* Baudrate at which running       */
-    dcb.fBinary         = TRUE;                 /* Binary Mode (skip EOF check)    */
-    dcb.fParity         = TRUE;                 /* Enable parity checking          */
-    dcb.fOutxCtsFlow    = FALSE;                /* CTS handshaking on output       */
-    dcb.fOutxDsrFlow    = FALSE;                /* DSR handshaking on output       */
-    dcb.fDtrControl     = DTR_CONTROL_DISABLE;  /* DTR Flow control                */
-    dcb.fDsrSensitivity = FALSE;                /* DSR Sensitivity                 */
-    dcb.fTXContinueOnXoff = FALSE;              /* Continue TX when Xoff sent      */
-    dcb.fOutX           = FALSE;                /* Enable output X-ON/X-OFF        */
-    dcb.fInX            = FALSE;                /* Enable input X-ON/X-OFF         */
-    dcb.fErrorChar      = FALSE;                /* Enable Err Replacement          */
-    dcb.fNull           = FALSE;                /* Enable Null stripping           */
-    dcb.fRtsControl     = RTS_CONTROL_DISABLE;  /* Rts Flow control                */
-    dcb.fAbortOnError   = FALSE;                /* Abort reads and writes on Error */
-    dcb.fDummy2         = 0;                    /* Reserved                        */
-    dcb.wReserved       = 0;                    /* Not currently used              */
-    dcb.XonLim          = 0;                    /* Transmit X-ON threshold         */
-    dcb.XoffLim         = 0;                    /* Transmit X-OFF threshold        */
-    dcb.ByteSize        = (BYTE)uBits;          /* Number of bits/byte, 4-8        */
-    dcb.Parity          = (BYTE)uParity;        /* 0-4=None,Odd,Even,Mark,Space    */
-    dcb.StopBits        = (BYTE)uStop;          /* 0,1,2 = 1, 1.5, 2               */
-    dcb.XonChar         = 0;                    /* Tx and Rx X-ON character        */
-    dcb.XoffChar        = 0;                    /* Tx and Rx X-OFF character       */
-    dcb.ErrorChar       = 0;                    /* Error replacement char          */
-    dcb.EofChar         = 0;                    /* End of Input character          */
-    dcb.EvtChar         = 0;                    /* Received Event character        */
-    dcb.wReserved1      = 0;                    /* Fill for now.                   */
+	dcb.BaudRate		= uRate;				/* Baudrate at which running       */
+	dcb.fBinary			= TRUE;					/* Binary Mode (skip EOF check)    */
+	dcb.fParity			= TRUE;					/* Enable parity checking          */
+	dcb.fOutxCtsFlow	= FALSE;				/* CTS handshaking on output       */
+	dcb.fOutxDsrFlow	= FALSE;				/* DSR handshaking on output       */
+	dcb.fDtrControl		= DTR_CONTROL_DISABLE;	/* DTR Flow control                */
+	dcb.fDsrSensitivity = FALSE;				/* DSR Sensitivity				   */
+	dcb.fTXContinueOnXoff = FALSE;				/* Continue TX when Xoff sent	   */
+	dcb.fOutX			= FALSE;				/* Enable output X-ON/X-OFF        */
+	dcb.fInX			= FALSE;				/* Enable input X-ON/X-OFF         */
+	dcb.fErrorChar		= FALSE;				/* Enable Err Replacement          */
+	dcb.fNull			= FALSE;				/* Enable Null stripping           */
+	dcb.fRtsControl		= RTS_CONTROL_DISABLE;  /* Rts Flow control                */
+	dcb.fAbortOnError	= FALSE;				/* Abort reads and writes on Error */
+	dcb.fDummy2			= 0;					/* Reserved                        */
+	dcb.wReserved       = 0;					/* Not currently used              */
+	dcb.XonLim          = 0;					/* Transmit X-ON threshold         */
+	dcb.XoffLim         = 0;					/* Transmit X-OFF threshold        */
+	dcb.ByteSize        = (BYTE)uBits;		    /* Number of bits/byte, 4-8        */
+	dcb.Parity          = (BYTE)uParity;		/* 0-4=None,Odd,Even,Mark,Space    */
+	dcb.StopBits        = (BYTE)uStop;		    /* 0,1,2 = 1, 1.5, 2               */
+	dcb.XonChar			= 0;					/* Tx and Rx X-ON character        */
+	dcb.XoffChar		= 0;					/* Tx and Rx X-OFF character       */
+	dcb.ErrorChar		= 0;					/* Error replacement char          */
+	dcb.EofChar			= 0;					/* End of Input character          */
+	dcb.EvtChar			= 0;					/* Received Event character        */
+	dcb.wReserved1		= 0;					/* Fill for now.                   */
 
-    /* Set the com state, i.e. new rate, settings */
-    Retval = SetCommState(pUart->hPort, &dcb) ? S_OK : E_FAIL;
+    // Set the com state, i.e. new rate, settings
+	Retval = SetCommState(pUart->hPort, &dcb) ? S_OK : E_FAIL;
     CHECK_RETVAL(Retval, ExitOnFailure);
 
     return Retval;
 
 ExitOnFailure:
 
-    /* Something failed close the port, if opened */
+    // Something failed close the port, if opened
     WinUartClose(hUart);
 
     return Retval;
@@ -239,7 +233,7 @@ WinUartClose(
 {
     WinUart_T *pUart = (WinUart_T *)hUart;
 
-    DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
+	DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
 
     if (pUart && pUart->hPort)
     {
@@ -257,9 +251,9 @@ WinUartRead(
     IN unsigned int uWaitTime   
     )
 {
-    int Retval;
-    DWORD dwRead;
-    DWORD dwTotal = 0;
+	int Retval;
+	DWORD dwRead;
+	DWORD dwTotal = 0;
     DWORD dwStart = 0;
     WinUart_T *pUart = (WinUart_T *)hUart;
 
@@ -273,7 +267,7 @@ WinUartRead(
         dwRead = 0;
 
         /* Attempt to read from the port */
-        Retval = ReadFile(pUart->hPort, 
+	    Retval = ReadFile(pUart->hPort, 
                           (char *)pBuff + dwTotal, 
                           uLength - dwTotal, 
                           &dwRead, 
@@ -331,11 +325,13 @@ WinUartWrite(
 {
     int Retval;
     DWORD dwWritten;
-    DWORD dwTotal = 0;
+	DWORD dwTotal = 0;
     DWORD dwStart = 0;
     WinUart_T *pUart = (WinUart_T *)hUart;
 
     DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
+
+    dwStart = GetTickCount();
 
     for ( ; ; )
     {
@@ -343,7 +339,7 @@ WinUartWrite(
         dwWritten = 0;
 
         /* write the data to the uart */
-        Retval = WriteFile(pUart->hPort, 
+	    Retval = WriteFile(pUart->hPort, 
                            (char *)pBuff + dwTotal, 
                            uLength - dwTotal, 
                            &dwWritten, 
@@ -381,7 +377,7 @@ WinUartWrite(
 
     if (puWritten)
     {
-        *puWritten = dwWritten;
+	    *puWritten = dwTotal;
     }
 
     return Retval;
@@ -397,7 +393,7 @@ WinUartSetStatus(
     WinUart_T *pUart = (WinUart_T *)hUart;
     DWORD dwModemStatus;
 
-    DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
+	DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
 
     Retval = WinUartLookup(uState, 
                            gModemStatusTable, 
@@ -424,7 +420,7 @@ WinUartGetStatus(
     WinUart_T *pUart = (WinUart_T *)hUart;
     DWORD dwModemStatus = 0;
 
-    DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
+	DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
 
     Retval = GetCommModemStatus(pUart->hPort, &dwModemStatus);
     Retval = Retval ? S_OK : E_FAIL;
@@ -457,27 +453,18 @@ ExitOnFailure:
     return Retval;
 }
 
-int 
-WinUartSetTimeouts(
-    IN uhandle_t    hUart,
-    IN unsigned int ReadTimeout,
-    IN unsigned int WriteTimeout
+int
+WinUartPurge(
+    IN uhandle_t    hUart
     )
 {
-    int Retval;
     WinUart_T *pUart = (WinUart_T *)hUart;
 
-    DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
+	DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
 
-    Retval = pUart && ReadTimeout && WriteTimeout ? S_OK : E_INVALIDARG;
-    CHECK_RETVAL(Retval, ExitOnFailure);
+    PurgeComm(pUart->hPort, PURGE_TXCLEAR | PURGE_RXCLEAR);
 
-    pUart->ReadTimeout = ReadTimeout;
-    pUart->WriteTimeout = WriteTimeout;
-
-ExitOnFailure:
-
-    return Retval;
+    return S_OK;
 }
 
 /*** Private Functions ******************************************************/
@@ -493,7 +480,7 @@ WinUartLookup(
     int Retval = E_FAIL;
     int i;
 
-    DBG_MSG(DBG_NONE, "%s\n", __FUNCTION__);
+	DBG_MSG(DBG_NONE, "%s\n", __FUNCTION__);
 
     *puSpecific = 0;
 
@@ -520,7 +507,7 @@ WinUartConvertSettings(
 {
     int Retval;
 
-    DBG_MSG(DBG_NONE, "%s\n", __FUNCTION__);
+	DBG_MSG(DBG_NONE, "%s\n", __FUNCTION__);
 
     Retval = WinUartLookup(*puRate, gBaudTable, COUNTOF(gBaudTable), puRate);
     CHECK_RETVAL(Retval, ExitOnFailure);

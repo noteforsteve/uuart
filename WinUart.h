@@ -3,17 +3,17 @@
 
 int
 WinUartCtor(
-    OUT uhandle_t   *ph
+    OUT uhandle_t	*ph
     );
 
 void
 WinUartDtor(
-    IN uhandle_t    h
+    IN uhandle_t  	h
     );
 
 int
 WinUartOpen(
-    IN uhandle_t    h,
+    IN uhandle_t  	h,
     IN const char   *pName,
     IN unsigned int uRate,
     IN unsigned int uDataBits,
@@ -23,12 +23,12 @@ WinUartOpen(
 
 void
 WinUartClose(
-    IN uhandle_t    h
+    IN uhandle_t  	h
     );
     
 int
 WinUartRead(
-    IN uhandle_t    h,
+    IN uhandle_t  	h,
     IO void         *pBuff,     
     IN unsigned int uLength,    
     OUT unsigned int *puRead,   
@@ -37,7 +37,7 @@ WinUartRead(
 
 int
 WinUartWrite(
-    IN uhandle_t    h,
+    IN uhandle_t  	h,
     IO const void   *pBuff,     
     IN unsigned int uLength,    
     OUT unsigned int *puWritten,   
@@ -46,21 +46,19 @@ WinUartWrite(
 
 int
 WinUartSetStatus(
-    IN uhandle_t    h,
+    IN uhandle_t  	h,
     IN unsigned int uState
     );
 
 int
 WinUartGetStatus(
-    IN uhandle_t    h,
+    IN uhandle_t  	h,
     OUT unsigned int *puState
     );
 
-int 
-WinUartSetTimeouts(
-    IN uhandle_t    hUart,
-    IN unsigned int ReadTimeout,
-    IN unsigned int WriteTimeout
+int
+WinUartPurge(
+    IN uhandle_t    hUart
     );
 
 #endif

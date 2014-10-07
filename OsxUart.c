@@ -15,9 +15,11 @@
 #include "OsxUart.h"
 
 #define DEBUG_MODULE
-#define DEBUG_LEVEL DBG_TRACE|DBG_WARN|DBG_ERROR 
-// #define DEBUG_LEVEL DBG_ERROR 
+#define DEBUG_LEVEL DBG_WARN|DBG_ERROR 
 #include "Debug.h"
+
+#define UART_MIN_READ_WAIT 	 	1
+#define UART_MIN_WRITE_WAIT		10
 
 /*** Type Definitions ********************************************************/
 
@@ -59,10 +61,8 @@ const OsxEntry_T gStopBitsTable [] =
 
 typedef struct
 {
-    int             hPort;
+    int 			hPort;
     struct termios  PortOptions;                                                                         
-    unsigned int    ReadTimeout;
-    unsigned int    WriteTimeout;
 } OsxUart_T;
 
 /*** Function Prototypes *****************************************************/
@@ -87,23 +87,18 @@ OsxUartConvertSettings(
 
 int
 OsxUartCtor(
-    IN uhandle_t    *phUart
+    IN uhandle_t	*phUart
     )
 {   
     int Retval;                                                                                     
-    OsxUart_T *pUart;
                                                                                                     
     DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);                                                       
                                                                                                     
-    pUart = (OsxUart_T *)malloc(sizeof(OsxUart_T));                                                                
-    Retval = pUart ? S_OK : E_NOMEMORY;                                                               
+    *phUart = (uhandle_t)malloc(sizeof(OsxUart_T));                                                                
+    Retval = *phUart ? S_OK : E_NOMEMORY;                                                               
     CHECK_RETVAL(Retval, ExitOnFailure);                                                            
 
-    memset(pUart, 0, sizeof(OsxUart_T));                                                              
-
-    pUart->ReadTimeout = 100;
-    pUart->WriteTimeout = 100;
-    *phUart = (uhandle_t)pUart;
+    memset((void *)*phUart, 0, sizeof(OsxUart_T));                                                              
                                                                                                     
 ExitOnFailure:                                                                                      
                                                                                                     
@@ -112,7 +107,7 @@ ExitOnFailure:
 
 void
 OsxUartDtor(
-    IN uhandle_t    hUart
+    IN uhandle_t	hUart
     )
 {
     DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
@@ -121,7 +116,7 @@ OsxUartDtor(
 
 int
 OsxUartOpen(
-    IN uhandle_t    hUart,
+    IN uhandle_t	hUart,
     IN const char   *pName,
     IN unsigned int uRate,
     IN unsigned int uBits,
@@ -208,7 +203,7 @@ ExitOnFailure:
 
 void
 OsxUartClose(
-    IN uhandle_t    hUart
+    IN uhandle_t	hUart
     )
 {
     int Retval;
@@ -231,7 +226,7 @@ OsxUartClose(
 
 int
 OsxUartRead(
-    IN uhandle_t    hUart,
+    IN uhandle_t	hUart,
     IO void         *pBuff,     
     IN unsigned int uLength,    
     OUT unsigned int *puRead,   
@@ -252,7 +247,7 @@ OsxUartRead(
     for ( ; ; )
     {
         iRead = read(pUart->hPort, pBuff+uTotal, uLength-uTotal);
-        Retval = iRead != -1 ? S_OK : E_FAIL;
+        Retval = iRead != -1 ? S_OK : S_OK;
         CHECK_RETVAL(Retval, ExitOnFailure);                                                            
 
         uTotal = uTotal + iRead;
@@ -268,7 +263,7 @@ OsxUartRead(
             break;
         }
 
-        PortableSleep(pUart->ReadTimeout);
+        PortableSleep(UART_MIN_READ_WAIT);
     }
 
     if (puRead)
@@ -283,7 +278,7 @@ ExitOnFailure:
 
 int
 OsxUartWrite(
-    IN uhandle_t    hUart,
+    IN uhandle_t	hUart,
     IO const void   *pBuff,     
     IN unsigned int uLength,    
     OUT unsigned int *puWritten,   
@@ -321,7 +316,7 @@ OsxUartWrite(
             break;
         }
     
-        PortableSleep(pUart->WriteTimeout);
+        PortableSleep(UART_MIN_WRITE_WAIT);
     }
 
     if (puWritten)
@@ -336,7 +331,7 @@ ExitOnFailure:
 
 int
 OsxUartSetStatus(
-    IN uhandle_t    hUart,
+    IN uhandle_t	hUart,
     IN unsigned int uState
     )
 {
@@ -391,7 +386,7 @@ ExitOnFailure:
 
 int
 OsxUartGetStatus(
-    IN uhandle_t    hUart,
+    IN uhandle_t	hUart,
     OUT unsigned int *puState
     )
 {
@@ -434,28 +429,6 @@ ExitOnFailure:
     return Retval;
 }
 
-int
-OsxUartSetTimeouts(
-    IN uhandle_t    h,
-    IN unsigned int ReadTimeout,
-    IN unsigned int WriteTimeout
-    )
-{
-    int Retval;
-    OsxUart_T *pUart = (OsxUart_T *)h;
-
-    DBG_MSG(DBG_TRACE, "%s\n", __FUNCTION__);
-
-    Retval = pUart && ReadTimeout && WriteTimeout ? S_OK : E_INVALIDARG;
-    CHECK_RETVAL(Retval, ExitOnFailure);
-
-    pUart->ReadTimeout = ReadTimeout;
-    pUart->WriteTimeout = WriteTimeout;
-
-ExitOnFailure:
-
-    return Retval;
-}
 
 /*** Private Functions ********************************************************/
 
